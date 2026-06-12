@@ -102,6 +102,7 @@ services:
       KAFKA_TOPIC_TRANSACTIONS: ${KAFKA_TOPIC_TRANSACTIONS:-spei.transactions}
       GENERATOR_MODE: ${GENERATOR_MODE:-idle}
       GENERATOR_TPS: ${GENERATOR_TPS:-10}
+      GENERATOR_ACCOUNTS: ${GENERATOR_ACCOUNTS:-2000}
     depends_on:
       kafka:
         condition: service_healthy

@@ -1,17 +1,23 @@
 package mx.centinela.domain.rules;
 
+import static mx.centinela.domain.Fixtures.DESTINATION;
+import static mx.centinela.domain.Fixtures.SOURCE;
 import static mx.centinela.domain.Fixtures.transactionOf;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
+import mx.centinela.domain.activity.InMemoryActivityWindow;
+import mx.centinela.domain.model.Money;
 import mx.centinela.domain.model.Severity;
 import mx.centinela.domain.model.Transaction;
-import mx.centinela.domain.port.out.AccountActivityPort;
+import mx.centinela.domain.model.TransactionId;
 import org.junit.jupiter.api.Test;
 
 class VelocityRuleTest {
+
+  private static final Instant BASE = Instant.parse("2026-06-12T18:30:00Z");
 
   private final RuleDefinition definition =
       new RuleDefinition(
@@ -20,37 +26,46 @@ class VelocityRuleTest {
           "Velocidad anómala",
           true,
           Severity.HIGH,
+          40,
           Map.of("maxTransfers", 10, "windowMinutes", 5));
+
+  private final InMemoryActivityWindow windows = new InMemoryActivityWindow();
+  private final VelocityRule rule = new VelocityRule(definition, windows);
 
   @Test
   void staysQuietAtTheLimit() {
-    VelocityRule rule = new VelocityRule(definition, (source, since) -> 10);
+    registerBurst(10, BASE);
 
-    assertThat(rule.evaluate(transactionOf("1000"))).isEmpty();
+    assertThat(rule.evaluate(transactionOf("1000", BASE))).isEmpty();
   }
 
   @Test
   void firesAboveTheLimit() {
-    VelocityRule rule = new VelocityRule(definition, (source, since) -> 12);
+    registerBurst(12, BASE);
 
-    var match = rule.evaluate(transactionOf("1000")).orElseThrow();
+    var match = rule.evaluate(transactionOf("1000", BASE)).orElseThrow();
     assertThat(match.explanation()).contains("12 transferencias").contains("5 minutos");
+    assertThat(match.weight()).isEqualTo(40);
   }
 
   @Test
-  void usesEventTimeForTheWindow() {
-    Instant eventTime = Instant.parse("2026-06-12T03:00:00Z");
-    Transaction tx = transactionOf("1000", eventTime);
+  void ignoresTransfersOutsideTheEventTimeWindow() {
+    registerBurst(12, BASE.minusSeconds(600)); // 10 min before: outside the 5-min window
 
-    var capturedSince = new Instant[1];
-    AccountActivityPort capturing =
-        (source, since) -> {
-          capturedSince[0] = since;
-          return 0;
-        };
+    assertThat(rule.evaluate(transactionOf("1000", BASE))).isEmpty();
+  }
 
-    new VelocityRule(definition, capturing).evaluate(tx);
-
-    assertThat(capturedSince[0]).isEqualTo(eventTime.minusSeconds(300));
+  private void registerBurst(int count, Instant around) {
+    for (int i = 0; i < count; i++) {
+      Transaction tx =
+          new Transaction(
+              TransactionId.newId(),
+              SOURCE,
+              DESTINATION,
+              Money.pesos(1000),
+              "burst",
+              around.minusSeconds(i));
+      windows.register(tx);
+    }
   }
 }

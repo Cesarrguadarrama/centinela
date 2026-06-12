@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.UUID;
 import mx.centinela.domain.model.Clabe;
 import mx.centinela.domain.model.Money;
+import mx.centinela.domain.model.ScoredTransaction;
 import mx.centinela.domain.model.Transaction;
 import mx.centinela.domain.model.TransactionId;
 
@@ -36,9 +37,13 @@ class TransactionEntity {
   @Column(name = "ts", nullable = false)
   private Instant timestamp;
 
+  @Column(nullable = false)
+  private int score;
+
   protected TransactionEntity() {}
 
-  static TransactionEntity from(Transaction tx) {
+  static TransactionEntity from(ScoredTransaction scored) {
+    Transaction tx = scored.transaction();
     TransactionEntity entity = new TransactionEntity();
     entity.id = tx.id().value();
     entity.sourceClabe = tx.source().value();
@@ -47,6 +52,7 @@ class TransactionEntity {
     entity.currency = Money.CURRENCY;
     entity.concept = tx.concept();
     entity.timestamp = tx.timestamp();
+    entity.score = scored.score().value();
     return entity;
   }
 

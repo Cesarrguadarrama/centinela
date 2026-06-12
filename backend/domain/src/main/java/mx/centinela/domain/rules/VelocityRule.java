@@ -1,10 +1,9 @@
 package mx.centinela.domain.rules;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Optional;
 import mx.centinela.domain.model.Transaction;
-import mx.centinela.domain.port.out.AccountActivityPort;
+import mx.centinela.domain.port.out.ActivityWindowPort;
 
 /**
  * Flags accounts firing too many transfers in a short window — automated dispersal, account
@@ -17,13 +16,13 @@ import mx.centinela.domain.port.out.AccountActivityPort;
 public final class VelocityRule implements FraudRule {
 
   private final RuleDefinition definition;
-  private final AccountActivityPort activity;
+  private final ActivityWindowPort windows;
   private final int maxTransfers;
   private final Duration window;
 
-  public VelocityRule(RuleDefinition definition, AccountActivityPort activity) {
+  public VelocityRule(RuleDefinition definition, ActivityWindowPort windows) {
     this.definition = definition;
-    this.activity = activity;
+    this.windows = windows;
     this.maxTransfers = definition.intParam("maxTransfers", 10);
     this.window = Duration.ofMinutes(definition.intParam("windowMinutes", 5));
   }
@@ -35,8 +34,7 @@ public final class VelocityRule implements FraudRule {
 
   @Override
   public Optional<RuleMatch> evaluate(Transaction tx) {
-    Instant since = tx.timestamp().minus(window);
-    long recent = activity.countTransfersFrom(tx.source(), since);
+    int recent = windows.outgoing(tx.source(), window, tx.timestamp()).count();
     if (recent <= maxTransfers) {
       return Optional.empty();
     }

@@ -8,8 +8,8 @@ import mx.centinela.domain.model.Severity;
 
 /**
  * A rule's runtime configuration as stored by operations — type selects the evaluation logic,
- * {@code params} tunes it. Editing a row in the rules table changes detection behavior without a
- * deploy.
+ * {@code params} tunes it, {@code weight} is its contribution to the composite score. Editing a row
+ * in the rules table changes detection behavior without a deploy.
  */
 public record RuleDefinition(
     UUID id,
@@ -17,6 +17,7 @@ public record RuleDefinition(
     String name,
     boolean enabled,
     Severity severity,
+    int weight,
     Map<String, Object> params) {
 
   public RuleDefinition {
@@ -25,6 +26,9 @@ public record RuleDefinition(
     Objects.requireNonNull(severity, "severity must not be null");
     if (name == null || name.isBlank()) {
       throw new IllegalArgumentException("rule name must not be blank");
+    }
+    if (weight < 0 || weight > 100) {
+      throw new IllegalArgumentException("rule weight must be within 0-100: " + weight);
     }
     params = params == null ? Map.of() : Map.copyOf(params);
   }

@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -44,6 +45,10 @@ class TransactionFlowIntegrationTest {
   static final KafkaContainer kafka =
       new KafkaContainer(DockerImageName.parse("apache/kafka:3.8.1"));
 
+  @Container
+  static final GenericContainer<?> redis =
+      new GenericContainer<>(DockerImageName.parse("redis:7-alpine")).withExposedPorts(6379);
+
   static KafkaProducer<String, String> producer;
 
   @Autowired JdbcTemplate jdbc;
@@ -54,6 +59,8 @@ class TransactionFlowIntegrationTest {
     registry.add("spring.datasource.username", postgres::getUsername);
     registry.add("spring.datasource.password", postgres::getPassword);
     registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
+    registry.add("spring.data.redis.host", redis::getHost);
+    registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
   }
 
   @BeforeAll
@@ -98,6 +105,54 @@ class TransactionFlowIntegrationTest {
     assertThat((String) alert.get("explanation"))
         .contains("transferencias salientes")
         .contains("5 minutos");
+  }
+
+  @Test
+  void raisesSmurfingAlertAndCompositeScoreForFragmentedTransfers() {
+    String antSource = randomClabe();
+    String antDestination = randomClabe();
+    String lastTxId = null;
+    for (int i = 0; i < 16; i++) { // 16 x $4,000 = $64,000 in small pieces
+      lastTxId = publish(antSource, antDestination, "4000.00", Instant.now());
+    }
+
+    Map<String, Object> alert = awaitAlert(lastTxId, "SMURFING");
+    assertThat((String) alert.get("explanation")).contains("hormiga").contains("transferencias");
+
+    // SMURFING (45) + VELOCITY (40) both fire on the 16-transfer burst
+    Integer score =
+        jdbc.queryForObject(
+            "SELECT score FROM transactions WHERE id = ?::uuid", Integer.class, lastTxId);
+    assertThat(score).isGreaterThanOrEqualTo(85);
+  }
+
+  @Test
+  void raisesCriticalMuleAlertWhenFundsConvergeAndDisperse() {
+    String mule = randomClabe();
+    for (int i = 0; i < 8; i++) { // $160,000 converging from 8 distinct senders
+      publish(randomClabe(), mule, "20000.00", Instant.now());
+    }
+    // Ensure every deposit is consumed before dispersal starts (deposits land on the
+    // senders' partitions, so cross-partition ordering is not guaranteed otherwise)
+    await()
+        .atMost(Duration.ofSeconds(60))
+        .until(
+            () ->
+                jdbc.queryForObject(
+                        "SELECT count(*) FROM transactions WHERE destination_clabe = ?",
+                        Long.class,
+                        mule)
+                    == 8L);
+
+    publish(mule, randomClabe(), "50000.00", Instant.now());
+    String secondPayout = publish(mule, randomClabe(), "50000.00", Instant.now());
+
+    Map<String, Object> alert = awaitAlert(secondPayout, "MULE_ACCOUNT");
+    assertThat(alert.get("severity")).isEqualTo("CRITICAL");
+    assertThat((String) alert.get("explanation"))
+        .contains("8 depósitos")
+        .contains("remitentes distintos")
+        .contains("cuenta mula");
   }
 
   @Test

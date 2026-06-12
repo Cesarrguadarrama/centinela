@@ -15,7 +15,13 @@ class OffHoursRuleTest {
 
   private RuleDefinition definition(Map<String, Object> params) {
     return new RuleDefinition(
-        UUID.randomUUID(), RuleType.OFF_HOURS, "Horario atípico", true, Severity.MEDIUM, params);
+        UUID.randomUUID(),
+        RuleType.OFF_HOURS,
+        "Horario atípico",
+        true,
+        Severity.MEDIUM,
+        15,
+        params);
   }
 
   @ParameterizedTest

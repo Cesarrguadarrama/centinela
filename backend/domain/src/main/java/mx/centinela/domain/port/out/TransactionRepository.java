@@ -1,9 +1,9 @@
 package mx.centinela.domain.port.out;
 
-import mx.centinela.domain.model.Transaction;
+import mx.centinela.domain.model.ScoredTransaction;
 
-/** Persistence of observed transactions. */
+/** Persistence of observed transactions together with their composite score. */
 public interface TransactionRepository {
 
-  void save(Transaction transaction);
+  void save(ScoredTransaction scored);
 }

@@ -1,6 +1,8 @@
 # ADR-0005: Velocity windows on Postgres first, Redis in phase 3
 
-**Status:** Accepted — 2026-06-12
+**Status:** Superseded in phase 3 as planned — `ActivityWindowPort` is now implemented by
+`RedisActivityWindowAdapter` (sorted sets, event-time scores); the Postgres COUNT adapter was
+removed. — 2026-06-12
 
 ## Context
 

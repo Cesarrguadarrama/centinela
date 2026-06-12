@@ -37,6 +37,9 @@ class RuleEntity {
   @Column(length = 16, nullable = false)
   private Severity severity;
 
+  @Column(nullable = false)
+  private int weight;
+
   @JdbcTypeCode(SqlTypes.JSON)
   @Column(nullable = false)
   private Map<String, Object> params;
@@ -44,6 +47,6 @@ class RuleEntity {
   protected RuleEntity() {}
 
   RuleDefinition toDomain() {
-    return new RuleDefinition(id, type, name, enabled, severity, params);
+    return new RuleDefinition(id, type, name, enabled, severity, weight, params);
   }
 }

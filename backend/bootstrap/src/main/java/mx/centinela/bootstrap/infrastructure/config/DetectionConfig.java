@@ -4,7 +4,7 @@ import java.time.Clock;
 import mx.centinela.application.RuleFactory;
 import mx.centinela.application.TransactionScoringService;
 import mx.centinela.domain.port.in.ProcessTransactionUseCase;
-import mx.centinela.domain.port.out.AccountActivityPort;
+import mx.centinela.domain.port.out.ActivityWindowPort;
 import mx.centinela.domain.port.out.AlertRepository;
 import mx.centinela.domain.port.out.RuleRepository;
 import mx.centinela.domain.port.out.TransactionRepository;
@@ -24,8 +24,8 @@ public class DetectionConfig {
   }
 
   @Bean
-  RuleFactory ruleFactory(AccountActivityPort accountActivity) {
-    return new RuleFactory(accountActivity);
+  RuleFactory ruleFactory(ActivityWindowPort activityWindows) {
+    return new RuleFactory(activityWindows);
   }
 
   @Bean
@@ -33,8 +33,10 @@ public class DetectionConfig {
       TransactionRepository transactions,
       RuleRepository rules,
       AlertRepository alerts,
+      ActivityWindowPort activityWindows,
       RuleFactory ruleFactory,
       Clock clock) {
-    return new TransactionScoringService(transactions, rules, alerts, ruleFactory, clock);
+    return new TransactionScoringService(
+        transactions, rules, alerts, activityWindows, ruleFactory, clock);
   }
 }

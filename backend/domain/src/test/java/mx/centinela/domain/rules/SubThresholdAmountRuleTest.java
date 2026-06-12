@@ -19,6 +19,7 @@ class SubThresholdAmountRuleTest {
           "Monto bajo umbral de reporte",
           true,
           Severity.HIGH,
+          35,
           Map.of("thresholdPesos", 50_000, "marginPesos", 5_000));
 
   private final SubThresholdAmountRule rule = new SubThresholdAmountRule(definition);

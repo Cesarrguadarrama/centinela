@@ -7,5 +7,9 @@ public enum RuleType {
   /** Too many transfers from one account within a short window. */
   VELOCITY,
   /** Activity in hours where legitimate traffic is rare. */
-  OFF_HOURS
+  OFF_HOURS,
+  /** Account receiving from many senders and dispersing the funds quickly. */
+  MULE_ACCOUNT,
+  /** Many small transfers that together move a large amount (montos hormiga). */
+  SMURFING
 }

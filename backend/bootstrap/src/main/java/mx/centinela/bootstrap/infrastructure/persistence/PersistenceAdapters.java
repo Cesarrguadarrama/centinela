@@ -4,9 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import mx.centinela.domain.model.Alert;
-import mx.centinela.domain.model.Clabe;
-import mx.centinela.domain.model.Transaction;
-import mx.centinela.domain.port.out.AccountActivityPort;
+import mx.centinela.domain.model.ScoredTransaction;
 import mx.centinela.domain.port.out.AlertRepository;
 import mx.centinela.domain.port.out.RuleRepository;
 import mx.centinela.domain.port.out.TransactionRepository;
@@ -17,8 +15,7 @@ import org.springframework.stereotype.Component;
 
 /** Postgres-backed implementations of the domain's outbound ports. */
 @Component
-class PersistenceAdapters
-    implements TransactionRepository, AlertRepository, RuleRepository, AccountActivityPort {
+class PersistenceAdapters implements TransactionRepository, AlertRepository, RuleRepository {
 
   private static final Logger log = LoggerFactory.getLogger(PersistenceAdapters.class);
 
@@ -42,8 +39,8 @@ class PersistenceAdapters
   }
 
   @Override
-  public void save(Transaction transaction) {
-    transactions.save(TransactionEntity.from(transaction));
+  public void save(ScoredTransaction scored) {
+    transactions.save(TransactionEntity.from(scored));
   }
 
   @Override
@@ -67,11 +64,6 @@ class PersistenceAdapters
         rules.findByEnabledTrue().stream().map(RuleEntity::toDomain).toList();
     cachedRules = new CachedRules(fresh, Instant.now());
     return fresh;
-  }
-
-  @Override
-  public long countTransfersFrom(Clabe source, Instant since) {
-    return transactions.countBySourceClabeAndTimestampAfter(source.value(), since);
   }
 
   private record CachedRules(List<RuleDefinition> definitions, Instant loadedAt) {}

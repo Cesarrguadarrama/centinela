@@ -1,11 +1,12 @@
 package mx.centinela.generator;
 
+import mx.centinela.generator.config.GeneratorProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.Bean;
  * injectable fraud scenarios — to Kafka so the detection engine has something to chew on.
  */
 @SpringBootApplication
+@ConfigurationPropertiesScan
 public class GeneratorApplication {
 
   private static final Logger log = LoggerFactory.getLogger(GeneratorApplication.class);
@@ -22,10 +24,12 @@ public class GeneratorApplication {
   }
 
   @Bean
-  CommandLineRunner announceMode(@Value("${centinela.generator.mode}") String mode) {
+  CommandLineRunner announceMode(GeneratorProperties properties) {
     return args ->
         log.info(
-            "Transaction generator started in '{}' mode — publishing logic arrives in phase 1",
-            mode);
+            "Transaction generator up — mode '{}', {} tps, {} synthetic accounts",
+            properties.mode(),
+            properties.transactionsPerSecond(),
+            properties.accounts());
   }
 }

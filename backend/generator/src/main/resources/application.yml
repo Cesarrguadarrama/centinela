@@ -9,6 +9,7 @@ centinela:
   generator:
     mode: ${GENERATOR_MODE:idle}
     transactions-per-second: ${GENERATOR_TPS:10}
+    accounts: ${GENERATOR_ACCOUNTS:200}
   kafka:
     topics:
       transactions: ${KAFKA_TOPIC_TRANSACTIONS:spei.transactions}

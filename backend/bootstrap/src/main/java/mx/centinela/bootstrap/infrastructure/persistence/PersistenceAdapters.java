@@ -3,7 +3,10 @@ package mx.centinela.bootstrap.infrastructure.persistence;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import mx.centinela.domain.model.Alert;
+import mx.centinela.domain.model.AlertId;
 import mx.centinela.domain.model.ScoredTransaction;
 import mx.centinela.domain.port.out.AlertRepository;
 import mx.centinela.domain.port.out.RuleRepository;
@@ -55,6 +58,11 @@ class PersistenceAdapters implements TransactionRepository, AlertRepository, Rul
   }
 
   @Override
+  public Optional<Alert> findById(AlertId id) {
+    return alerts.findById(id.value()).map(AlertEntity::toDomain);
+  }
+
+  @Override
   public List<RuleDefinition> findEnabled() {
     CachedRules cached = cachedRules;
     if (cached != null && cached.loadedAt().plus(RULES_CACHE_TTL).isAfter(Instant.now())) {
@@ -64,6 +72,22 @@ class PersistenceAdapters implements TransactionRepository, AlertRepository, Rul
         rules.findByEnabledTrue().stream().map(RuleEntity::toDomain).toList();
     cachedRules = new CachedRules(fresh, Instant.now());
     return fresh;
+  }
+
+  @Override
+  public List<RuleDefinition> findAll() {
+    return rules.findAll().stream().map(RuleEntity::toDomain).toList();
+  }
+
+  @Override
+  public Optional<RuleDefinition> findById(UUID id) {
+    return rules.findById(id).map(RuleEntity::toDomain);
+  }
+
+  @Override
+  public void save(RuleDefinition definition) {
+    rules.save(RuleEntity.from(definition));
+    cachedRules = null; // rule edits must reach the engine immediately, not after the TTL
   }
 
   private record CachedRules(List<RuleDefinition> definitions, Instant loadedAt) {}

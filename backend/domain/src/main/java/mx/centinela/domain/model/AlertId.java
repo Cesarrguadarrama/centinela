@@ -14,6 +14,10 @@ public record AlertId(UUID value) {
     return new AlertId(UUID.randomUUID());
   }
 
+  public static AlertId of(String value) {
+    return new AlertId(UUID.fromString(value));
+  }
+
   @Override
   public String toString() {
     return value.toString();

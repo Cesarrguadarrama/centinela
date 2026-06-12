@@ -1,11 +1,16 @@
 package mx.centinela.bootstrap.infrastructure.config;
 
 import java.time.Clock;
+import mx.centinela.application.AlertTriageService;
 import mx.centinela.application.RuleFactory;
+import mx.centinela.application.RuleManagementService;
 import mx.centinela.application.TransactionScoringService;
+import mx.centinela.domain.port.in.ManageRulesUseCase;
 import mx.centinela.domain.port.in.ProcessTransactionUseCase;
+import mx.centinela.domain.port.in.TriageAlertUseCase;
 import mx.centinela.domain.port.out.ActivityWindowPort;
 import mx.centinela.domain.port.out.AlertRepository;
+import mx.centinela.domain.port.out.AlertStreamPort;
 import mx.centinela.domain.port.out.RuleRepository;
 import mx.centinela.domain.port.out.TransactionRepository;
 import org.springframework.context.annotation.Bean;
@@ -34,9 +39,20 @@ public class DetectionConfig {
       RuleRepository rules,
       AlertRepository alerts,
       ActivityWindowPort activityWindows,
+      AlertStreamPort alertStream,
       RuleFactory ruleFactory,
       Clock clock) {
     return new TransactionScoringService(
-        transactions, rules, alerts, activityWindows, ruleFactory, clock);
+        transactions, rules, alerts, activityWindows, alertStream, ruleFactory, clock);
+  }
+
+  @Bean
+  TriageAlertUseCase triageAlertUseCase(AlertRepository alerts) {
+    return new AlertTriageService(alerts);
+  }
+
+  @Bean
+  ManageRulesUseCase manageRulesUseCase(RuleRepository rules) {
+    return new RuleManagementService(rules);
   }
 }

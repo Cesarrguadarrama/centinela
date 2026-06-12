@@ -17,6 +17,7 @@ class SubThresholdAmountRuleTest {
           UUID.randomUUID(),
           RuleType.SUB_THRESHOLD_AMOUNT,
           "Monto bajo umbral de reporte",
+          "",
           true,
           Severity.HIGH,
           35,

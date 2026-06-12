@@ -24,6 +24,7 @@ class SmurfingRuleTest {
           UUID.randomUUID(),
           RuleType.SMURFING,
           "Montos hormiga",
+          "",
           true,
           Severity.HIGH,
           45,

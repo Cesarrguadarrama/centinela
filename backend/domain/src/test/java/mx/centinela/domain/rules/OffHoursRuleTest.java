@@ -18,6 +18,7 @@ class OffHoursRuleTest {
         UUID.randomUUID(),
         RuleType.OFF_HOURS,
         "Horario atípico",
+        "",
         true,
         Severity.MEDIUM,
         15,

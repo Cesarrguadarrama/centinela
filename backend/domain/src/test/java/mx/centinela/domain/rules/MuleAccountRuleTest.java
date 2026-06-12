@@ -23,6 +23,7 @@ class MuleAccountRuleTest {
           UUID.randomUUID(),
           RuleType.MULE_ACCOUNT,
           "Cuenta mula",
+          "",
           true,
           Severity.CRITICAL,
           60,

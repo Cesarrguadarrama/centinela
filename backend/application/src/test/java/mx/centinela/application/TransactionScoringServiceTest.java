@@ -9,9 +9,11 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import mx.centinela.domain.activity.WindowSnapshot;
 import mx.centinela.domain.model.Alert;
+import mx.centinela.domain.model.AlertId;
 import mx.centinela.domain.model.AlertStatus;
 import mx.centinela.domain.model.Clabe;
 import mx.centinela.domain.model.Money;
@@ -20,6 +22,8 @@ import mx.centinela.domain.model.Severity;
 import mx.centinela.domain.model.Transaction;
 import mx.centinela.domain.model.TransactionId;
 import mx.centinela.domain.port.out.ActivityWindowPort;
+import mx.centinela.domain.port.out.AlertRepository;
+import mx.centinela.domain.port.out.RuleRepository;
 import mx.centinela.domain.rules.RuleDefinition;
 import mx.centinela.domain.rules.RuleType;
 import org.junit.jupiter.api.Test;
@@ -51,12 +55,51 @@ class TransactionScoringServiceTest {
         }
       };
 
+  private final List<Alert> streamedAlerts = new ArrayList<>();
+
+  private final RuleRepository ruleRepository =
+      new RuleRepository() {
+        @Override
+        public List<RuleDefinition> findEnabled() {
+          return enabledRules.stream().filter(RuleDefinition::enabled).toList();
+        }
+
+        @Override
+        public List<RuleDefinition> findAll() {
+          return List.copyOf(enabledRules);
+        }
+
+        @Override
+        public Optional<RuleDefinition> findById(UUID id) {
+          return enabledRules.stream().filter(r -> r.id().equals(id)).findFirst();
+        }
+
+        @Override
+        public void save(RuleDefinition definition) {
+          enabledRules.add(definition);
+        }
+      };
+
+  private final AlertRepository alertRepository =
+      new AlertRepository() {
+        @Override
+        public void save(Alert alert) {
+          savedAlerts.add(alert);
+        }
+
+        @Override
+        public Optional<Alert> findById(AlertId id) {
+          return savedAlerts.stream().filter(a -> a.id().equals(id)).findFirst();
+        }
+      };
+
   private final TransactionScoringService service =
       new TransactionScoringService(
           savedTransactions::add,
-          () -> List.copyOf(enabledRules),
-          savedAlerts::add,
+          ruleRepository,
+          alertRepository,
           emptyWindows,
+          (alert, context) -> streamedAlerts.add(alert),
           new RuleFactory(emptyWindows),
           Clock.fixed(NOW, ZoneOffset.UTC));
 
@@ -91,6 +134,7 @@ class TransactionScoringServiceTest {
 
     assertThat(savedTransactions.get(0).score().value()).isEqualTo(35);
     assertThat(savedTransactions.get(0).matches()).hasSize(1);
+    assertThat(streamedAlerts).containsExactlyElementsOf(savedAlerts);
   }
 
   @Test
@@ -100,6 +144,7 @@ class TransactionScoringServiceTest {
             UUID.randomUUID(),
             RuleType.SUB_THRESHOLD_AMOUNT,
             "Apagada",
+            "",
             false,
             Severity.HIGH,
             35,
@@ -116,6 +161,7 @@ class TransactionScoringServiceTest {
         UUID.randomUUID(),
         RuleType.SUB_THRESHOLD_AMOUNT,
         "Monto bajo umbral",
+        "",
         true,
         Severity.HIGH,
         weight,

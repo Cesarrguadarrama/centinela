@@ -46,7 +46,20 @@ class RuleEntity {
 
   protected RuleEntity() {}
 
+  static RuleEntity from(RuleDefinition definition) {
+    RuleEntity entity = new RuleEntity();
+    entity.id = definition.id();
+    entity.type = definition.type();
+    entity.name = definition.name();
+    entity.description = definition.description();
+    entity.enabled = definition.enabled();
+    entity.severity = definition.severity();
+    entity.weight = definition.weight();
+    entity.params = definition.params();
+    return entity;
+  }
+
   RuleDefinition toDomain() {
-    return new RuleDefinition(id, type, name, enabled, severity, weight, params);
+    return new RuleDefinition(id, type, name, description, enabled, severity, weight, params);
   }
 }

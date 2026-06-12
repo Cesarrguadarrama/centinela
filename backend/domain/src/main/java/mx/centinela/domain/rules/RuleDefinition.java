@@ -15,6 +15,7 @@ public record RuleDefinition(
     UUID id,
     RuleType type,
     String name,
+    String description,
     boolean enabled,
     Severity severity,
     int weight,
@@ -30,6 +31,7 @@ public record RuleDefinition(
     if (weight < 0 || weight > 100) {
       throw new IllegalArgumentException("rule weight must be within 0-100: " + weight);
     }
+    description = description == null ? "" : description.strip();
     params = params == null ? Map.of() : Map.copyOf(params);
   }
 

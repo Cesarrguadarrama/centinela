@@ -9,8 +9,10 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.UUID;
 import mx.centinela.domain.model.Alert;
+import mx.centinela.domain.model.AlertId;
 import mx.centinela.domain.model.AlertStatus;
 import mx.centinela.domain.model.Severity;
+import mx.centinela.domain.model.TransactionId;
 
 @Entity
 @Table(name = "alerts")
@@ -54,5 +56,17 @@ class AlertEntity {
     entity.status = alert.status();
     entity.createdAt = alert.createdAt();
     return entity;
+  }
+
+  Alert toDomain() {
+    return new Alert(
+        new AlertId(id),
+        new TransactionId(transactionId),
+        ruleId,
+        ruleName,
+        severity,
+        explanation,
+        status,
+        createdAt);
   }
 }

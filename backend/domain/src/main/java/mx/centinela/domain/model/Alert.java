@@ -42,4 +42,15 @@ public record Alert(
         AlertStatus.NEW,
         now);
   }
+
+  /**
+   * Analyst triage. An alert never returns to NEW — that state means "nobody has looked at this
+   * yet", and unseeing is not a thing. REVIEWED and FALSE_POSITIVE can be corrected to each other.
+   */
+  public Alert triage(AlertStatus target) {
+    if (target == AlertStatus.NEW) {
+      throw new IllegalArgumentException("an alert cannot be returned to NEW");
+    }
+    return new Alert(id, transactionId, ruleId, ruleName, severity, explanation, target, createdAt);
+  }
 }

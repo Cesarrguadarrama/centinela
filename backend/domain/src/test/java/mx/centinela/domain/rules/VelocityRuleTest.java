@@ -24,6 +24,7 @@ class VelocityRuleTest {
           UUID.randomUUID(),
           RuleType.VELOCITY,
           "Velocidad anómala",
+          "",
           true,
           Severity.HIGH,
           40,

@@ -10,6 +10,7 @@ import mx.centinela.domain.model.Transaction;
 import mx.centinela.domain.port.in.ProcessTransactionUseCase;
 import mx.centinela.domain.port.out.ActivityWindowPort;
 import mx.centinela.domain.port.out.AlertRepository;
+import mx.centinela.domain.port.out.AlertStreamPort;
 import mx.centinela.domain.port.out.RuleRepository;
 import mx.centinela.domain.port.out.TransactionRepository;
 import mx.centinela.domain.rules.RuleMatch;
@@ -25,6 +26,7 @@ public class TransactionScoringService implements ProcessTransactionUseCase {
   private final RuleRepository rules;
   private final AlertRepository alerts;
   private final ActivityWindowPort activityWindows;
+  private final AlertStreamPort alertStream;
   private final RuleFactory ruleFactory;
   private final Clock clock;
 
@@ -33,12 +35,14 @@ public class TransactionScoringService implements ProcessTransactionUseCase {
       RuleRepository rules,
       AlertRepository alerts,
       ActivityWindowPort activityWindows,
+      AlertStreamPort alertStream,
       RuleFactory ruleFactory,
       Clock clock) {
     this.transactions = transactions;
     this.rules = rules;
     this.alerts = alerts;
     this.activityWindows = activityWindows;
+    this.alertStream = alertStream;
     this.ruleFactory = ruleFactory;
     this.clock = clock;
   }
@@ -53,7 +57,13 @@ public class TransactionScoringService implements ProcessTransactionUseCase {
             .flatMap(Optional::stream)
             .toList();
 
-    transactions.save(new ScoredTransaction(transaction, Score.fromMatches(matches), matches));
-    matches.forEach(match -> alerts.save(Alert.raise(transaction, match, clock.instant())));
+    ScoredTransaction scored =
+        new ScoredTransaction(transaction, Score.fromMatches(matches), matches);
+    transactions.save(scored);
+    for (RuleMatch match : matches) {
+      Alert alert = Alert.raise(transaction, match, clock.instant());
+      alerts.save(alert);
+      alertStream.publish(alert, scored);
+    }
   }
 }

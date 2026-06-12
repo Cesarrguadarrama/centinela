@@ -32,7 +32,7 @@ import org.testcontainers.utility.DockerImageName;
  * must end as a persisted transaction plus the expected alerts in Postgres. Events are raw JSON
  * strings on purpose — this validates the wire contract, not shared Java classes.
  */
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 class TransactionFlowIntegrationTest {
 
@@ -128,8 +128,9 @@ class TransactionFlowIntegrationTest {
 
   @Test
   void raisesCriticalMuleAlertWhenFundsConvergeAndDisperse() {
+    // Numbers track the V4-tuned thresholds: minIncoming=10, dispersalRatio=0.7
     String mule = randomClabe();
-    for (int i = 0; i < 8; i++) { // $160,000 converging from 8 distinct senders
+    for (int i = 0; i < 10; i++) { // $200,000 converging from 10 distinct senders
       publish(randomClabe(), mule, "20000.00", Instant.now());
     }
     // Ensure every deposit is consumed before dispersal starts (deposits land on the
@@ -142,15 +143,15 @@ class TransactionFlowIntegrationTest {
                         "SELECT count(*) FROM transactions WHERE destination_clabe = ?",
                         Long.class,
                         mule)
-                    == 8L);
+                    == 10L);
 
-    publish(mule, randomClabe(), "50000.00", Instant.now());
-    String secondPayout = publish(mule, randomClabe(), "50000.00", Instant.now());
+    publish(mule, randomClabe(), "75000.00", Instant.now());
+    String secondPayout = publish(mule, randomClabe(), "75000.00", Instant.now()); // 75% out
 
     Map<String, Object> alert = awaitAlert(secondPayout, "MULE_ACCOUNT");
     assertThat(alert.get("severity")).isEqualTo("CRITICAL");
     assertThat((String) alert.get("explanation"))
-        .contains("8 depósitos")
+        .contains("10 depósitos")
         .contains("remitentes distintos")
         .contains("cuenta mula");
   }

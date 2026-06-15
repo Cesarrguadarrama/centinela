@@ -1,0 +1,72 @@
+<section class="filters">
+  <select [(ngModel)]="status" (change)="search()">
+    <option value="">Todos los estados</option>
+    @for (s of statuses; track s) {
+      <option [value]="s">{{ s }}</option>
+    }
+  </select>
+  <select [(ngModel)]="severity" (change)="search()">
+    <option value="">Toda severidad</option>
+    @for (s of severities; track s) {
+      <option [value]="s">{{ s }}</option>
+    }
+  </select>
+  <input
+    [(ngModel)]="clabe"
+    (keyup.enter)="search()"
+    placeholder="Filtrar por CLABE (18 dígitos)"
+  />
+  <button (click)="search()">Buscar</button>
+</section>
+
+@if (page(); as p) {
+  <p class="count">{{ p.totalItems | number }} alertas</p>
+  <table>
+    <thead>
+      <tr>
+        <th>Score</th>
+        <th>Severidad</th>
+        <th>Regla</th>
+        <th>Monto</th>
+        <th>Origen</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (a of p.items; track a.id) {
+        <tr>
+          <td>
+            <span class="score" [style.background]="scoreColor(a.transactionScore)">{{
+              a.transactionScore
+            }}</span>
+          </td>
+          <td><cen-severity [severity]="a.severity" /></td>
+          <td>
+            <strong>{{ a.ruleName }}</strong>
+            <p class="exp">{{ a.explanation }}</p>
+          </td>
+          <td class="num">{{ money(a.amount) }}</td>
+          <td>
+            <a [routerLink]="['/accounts', a.sourceClabe]">{{ maskClabe(a.sourceClabe) }}</a>
+          </td>
+          <td><span class="status" [attr.data-s]="a.status">{{ a.status }}</span></td>
+          <td class="actions">
+            @if (a.status !== 'REVIEWED') {
+              <button (click)="triage(a, 'review')">Revisada</button>
+            }
+            @if (a.status !== 'FALSE_POSITIVE') {
+              <button class="ghost" (click)="triage(a, 'false-positive')">Falso +</button>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+
+  <div class="pager">
+    <button (click)="go(-1)" [disabled]="pageIndex === 0">‹</button>
+    <span>{{ pageIndex + 1 }} / {{ totalPages() }}</span>
+    <button (click)="go(1)" [disabled]="pageIndex + 1 >= totalPages()">›</button>
+  </div>
+}

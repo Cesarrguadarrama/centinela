@@ -1,0 +1,65 @@
+<p class="hint">
+  Las reglas se evalúan sobre cada transacción. El <strong>peso</strong> suma al score compuesto
+  (0–100). Editar una regla surte efecto en segundos, sin reiniciar el motor.
+</p>
+
+<div class="grid">
+  @for (rule of rules(); track rule.id) {
+    <div class="rule" [class.disabled]="!rule.enabled">
+      <div class="head">
+        <cen-severity [severity]="rule.severity" />
+        <strong>{{ rule.name }}</strong>
+        <span class="weight">peso {{ rule.weight }}</span>
+      </div>
+      <p class="desc">{{ rule.description }}</p>
+      <code class="params">{{ paramsText(rule) }}</code>
+      <div class="actions">
+        <button (click)="edit(rule)">Editar</button>
+        <button class="ghost" (click)="toggle(rule)">
+          {{ rule.enabled ? 'Deshabilitar' : 'Habilitar' }}
+        </button>
+        <span class="state">{{ rule.enabled ? 'activa' : 'inactiva' }}</span>
+      </div>
+    </div>
+  }
+</div>
+
+@if (editing(); as rule) {
+  <div class="modal-backdrop" (keyup.escape)="cancel()" tabindex="-1">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Editar regla">
+      <h3>Editar regla</h3>
+      <label>Nombre <input [(ngModel)]="rule.name" /></label>
+      <label>Descripción <textarea rows="2" [(ngModel)]="rule.description"></textarea></label>
+      <div class="row">
+        <label>
+          Severidad
+          <select [(ngModel)]="rule.severity">
+            <option value="LOW">LOW</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="HIGH">HIGH</option>
+            <option value="CRITICAL">CRITICAL</option>
+          </select>
+        </label>
+        <label>Peso (0–100) <input type="number" min="0" max="100" [(ngModel)]="rule.weight" /></label>
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="rule.enabled" /> Activa
+        </label>
+      </div>
+      <label>
+        Parámetros (JSON)
+        <textarea
+          rows="6"
+          class="json"
+          [value]="paramsText(rule)"
+          (input)="onParamsText(rule, $any($event.target).value)"
+        ></textarea>
+      </label>
+      <div class="modal-actions">
+        <button class="ghost" (click)="cancel()">Cancelar</button>
+        <button (click)="save()" [disabled]="saving()">
+          {{ saving() ? 'Guardando…' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

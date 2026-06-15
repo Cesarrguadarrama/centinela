@@ -1,0 +1,64 @@
+<h2 class="clabe">Cuenta {{ maskClabe(clabe()) }}</h2>
+
+@if (summary(); as s) {
+  <section class="cards">
+    <div class="card">
+      <span class="k">Enviado ({{ s.windowHours }}h)</span>
+      <span class="v">{{ money(s.sentTotal) }}</span>
+      <span class="sub">{{ s.sentCount }} transferencias</span>
+    </div>
+    <div class="card">
+      <span class="k">Recibido ({{ s.windowHours }}h)</span>
+      <span class="v">{{ money(s.receivedTotal) }}</span>
+      <span class="sub">{{ s.receivedCount }} transferencias</span>
+    </div>
+    <div class="card">
+      <span class="k">Alertas</span>
+      <span class="v">{{ s.alertCount }}</span>
+    </div>
+    <div class="card">
+      <span class="k">Score máximo</span>
+      <span class="v" [style.color]="scoreColor(s.maxScore)">{{ s.maxScore }}</span>
+    </div>
+  </section>
+}
+
+<h3>Historial de transacciones</h3>
+@if (transactions(); as t) {
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>Contraparte</th>
+        <th>Monto</th>
+        <th>Concepto</th>
+        <th>Fecha</th>
+        <th>Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (tx of t.items; track tx.id) {
+        <tr>
+          <td>
+            <span class="dir" [class.out]="direction(tx) === 'out'">
+              {{ direction(tx) === 'out' ? '↑ envía' : '↓ recibe' }}
+            </span>
+          </td>
+          <td>
+            {{
+              maskClabe(direction(tx) === 'out' ? tx.destinationClabe : tx.sourceClabe)
+            }}
+          </td>
+          <td class="num">{{ money(tx.amount) }}</td>
+          <td>{{ tx.concept }}</td>
+          <td>{{ tx.timestamp | date: 'dd/MM HH:mm:ss' }}</td>
+          <td>
+            @if (tx.score > 0) {
+              <span class="score" [style.background]="scoreColor(tx.score)">{{ tx.score }}</span>
+            }
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}

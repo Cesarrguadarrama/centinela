@@ -1,7 +1,23 @@
-<main class="shell">
-  <h1>🛡️ {{ title() }}</h1>
-  <p class="subtitle">Detección de fraude SPEI en tiempo real</p>
-  <span class="badge">{{ phase() }}</span>
-</main>
+<header class="topbar">
+  <div class="brand">
+    🛡️ <strong>Centinela</strong>
+    <span class="tag">Detección de fraude SPEI</span>
+  </div>
+  <nav>
+    <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+    <a routerLink="/alerts" routerLinkActive="active">Alertas</a>
+    <a routerLink="/rules" routerLinkActive="active">Reglas</a>
+  </nav>
+  <div class="demo">
+    <span class="demo-label">Inyectar ataque:</span>
+    @for (s of scenarios; track s) {
+      <button (click)="inject_(s)" [disabled]="busy() === s">
+        {{ busy() === s ? '…' : s }}
+      </button>
+    }
+  </div>
+</header>
 
-<router-outlet />
+<main>
+  <router-outlet />
+</main>

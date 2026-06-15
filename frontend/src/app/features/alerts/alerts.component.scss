@@ -1,0 +1,121 @@
+.filters {
+  display: flex;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  select,
+  input,
+  button {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #e6edf3;
+    padding: 0.45rem 0.7rem;
+  }
+  input {
+    flex: 1;
+    min-width: 220px;
+  }
+  button {
+    cursor: pointer;
+    background: #1f6feb;
+    border-color: #1f6feb;
+  }
+}
+
+.count {
+  color: #8b949e;
+  margin: 0 0 0.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 10px;
+  overflow: hidden;
+}
+th,
+td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #21262d;
+  vertical-align: top;
+  font-size: 0.88rem;
+}
+th {
+  color: #8b949e;
+  font-weight: 600;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.exp {
+  margin: 0.25rem 0 0;
+  color: #8b949e;
+  font-size: 0.8rem;
+  max-width: 420px;
+}
+.score {
+  display: inline-flex;
+  width: 34px;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  color: #0d1117;
+  font-weight: 700;
+}
+a {
+  color: #58a6ff;
+  text-decoration: none;
+}
+.status {
+  font-size: 0.75rem;
+  &[data-s='NEW'] {
+    color: #58a6ff;
+  }
+  &[data-s='REVIEWED'] {
+    color: #3fb950;
+  }
+  &[data-s='FALSE_POSITIVE'] {
+    color: #8b949e;
+  }
+}
+.actions {
+  white-space: nowrap;
+  button {
+    cursor: pointer;
+    border: 1px solid #30363d;
+    background: #21262d;
+    color: #e6edf3;
+    border-radius: 6px;
+    padding: 0.3rem 0.55rem;
+    font-size: 0.78rem;
+    margin-right: 0.3rem;
+  }
+  .ghost {
+    background: transparent;
+  }
+}
+.pager {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  button {
+    background: #161b22;
+    border: 1px solid #30363d;
+    color: #e6edf3;
+    border-radius: 6px;
+    padding: 0.3rem 0.8rem;
+    cursor: pointer;
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+}

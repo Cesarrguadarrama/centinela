@@ -1,0 +1,64 @@
+<section class="cards">
+  <div class="card">
+    <span class="k">Transacciones</span>
+    <span class="v">{{ (overview()?.totalTransactions ?? 0) | number }}</span>
+  </div>
+  <div class="card">
+    <span class="k">Alertas</span>
+    <span class="v">{{ (overview()?.totalAlerts ?? 0) | number }}</span>
+  </div>
+  <div class="card">
+    <span class="k">Tasa de detección</span>
+    <span class="v">{{ detectionRate() }}%</span>
+  </div>
+  <div class="card">
+    <span class="k">Score promedio</span>
+    <span class="v">{{ overview()?.averageScore ?? 0 }}</span>
+  </div>
+</section>
+
+<section class="charts">
+  <div class="panel">
+    <h3>Transacciones y alertas por minuto</h3>
+    <cen-line-chart [points]="pulse()" />
+  </div>
+  <div class="panel">
+    <h3>Distribución de score</h3>
+    <cen-bar-chart [bars]="scoreBars()" />
+  </div>
+</section>
+
+<section class="panel feed">
+  <h3>
+    Feed de alertas en vivo
+    <span class="conn" [class.on]="connected()">
+      {{ connected() ? '● conectado' : '○ desconectado' }}
+    </span>
+  </h3>
+
+  @if (liveAlerts().length === 0) {
+    <p class="empty">Esperando alertas… inyecta un ataque desde el generador para verlas aquí.</p>
+  }
+
+  <ul class="alerts">
+    @for (a of liveAlerts(); track a.alertId) {
+      <li>
+        <span class="score" [style.background]="scoreColor(a.transactionScore)">
+          {{ a.transactionScore }}
+        </span>
+        <div class="body">
+          <div class="row">
+            <cen-severity [severity]="a.severity" />
+            <strong>{{ a.ruleName }}</strong>
+            <span class="amount">{{ money(a.amount) }}</span>
+          </div>
+          <p class="exp">{{ a.explanation }}</p>
+          <div class="meta">
+            <a [routerLink]="['/accounts', a.sourceClabe]">{{ maskClabe(a.sourceClabe) }}</a>
+            → {{ maskClabe(a.destinationClabe) }}
+          </div>
+        </div>
+      </li>
+    }
+  </ul>
+</section>
